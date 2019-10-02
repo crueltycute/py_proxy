@@ -8,6 +8,12 @@
 
 ### Запуск прокси-сервера:
 
+
 ```
-python3 src/main.py
+python3 main.py *port*
+```
+Или по дефолту (то есть 0.0.0.0:8081):
+
+```
+python3 main.py
 ```

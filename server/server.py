@@ -28,19 +28,19 @@ class Server:
             read_list, _, _ = select.select(self.input_list, [], [])
             for s in read_list:
                 if s == self.server_socket:
-                    redirect = Proxy().start(REDIRECT_TO.get('host'), REDIRECT_TO.get('port'))
+                    proxy = Proxy().start(REDIRECT_TO.get('host'), REDIRECT_TO.get('port'))
 
                     client_socket, client_address = self.server_socket.accept()
-                    if redirect:
-                        print(f'{client_address[0]}:{client_address[1]} is connected')
+                    if proxy:
+                        print(f'{client_address[0]}:{client_address[1]} is connected\n')
 
                         self.input_list.append(client_socket)
-                        self.input_list.append(redirect)
+                        self.input_list.append(proxy)
 
-                        self.channel[client_socket] = redirect
-                        self.channel[redirect] = client_socket
+                        self.channel[client_socket] = proxy
+                        self.channel[proxy] = client_socket
                     else:
-                        print(f'Cannot reach remote server, closing connection with client: {client_address[0]}')
+                        print(f'Cannot reach remote server, closing connection with client: {client_address[0]}\n')
                         client_socket.close()
                     break
 
@@ -53,7 +53,7 @@ class Server:
                     self.channel[s].send(data)
 
     def close(self, s):
-        print(f'{s.getpeername()[0]}:{s.getpeername()[1]} has disconnected')
+        print(f'{s.getpeername()[0]}:{s.getpeername()[1]} has disconnected\n')
 
         self.input_list.remove(s)
         self.input_list.remove(self.channel[s])
