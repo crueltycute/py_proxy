@@ -1,5 +1,6 @@
 import socket
 import select
+import ssl
 
 from proxy.proxy import Proxy
 from proxy.ca import CertificateAuthority
@@ -28,9 +29,10 @@ class Server:
         while True:
             read_list, _, _ = select.select(self.input_list, [], [])
             for s in read_list:
+
                 if s == self.server_socket:
-                    proxy = Proxy().start(REDIRECT_TO.get('host'), REDIRECT_TO.get('port'))
                     client_socket, client_address = self.server_socket.accept()
+                    proxy = Proxy().start(REDIRECT_TO.get('host'), REDIRECT_TO.get('port'))
 
                     if proxy:
                         print(f'{client_address[0]}:{client_address[1]} is connected\n')
@@ -51,18 +53,29 @@ class Server:
                     break
                 else:
                     if self.has_CONNECT(data):
-                        self.wrap_with_ssl(proxy)
+                        self.wrap_with_ssl(client_socket, proxy)
 
                     print(data)
                     self.channel[s].send(data)
 
     @staticmethod
     def has_CONNECT(data):
-        return data.split(b'\n')[0].split()[0] == b'CONNECT'
+        try:
+            return data.split(b'\n')[0].split()[0] == b'CONNECT'
+        except IndexError:
+            return False
 
     @staticmethod
-    def wrap_with_ssl(proxy):
-        print('need to wrap proxy with ssl')
+    def wrap_with_ssl(client_socket, proxy):
+        print('trying to wrap proxy with ssl')
+
+        ca = CertificateAuthority()
+
+        client_socket = ssl.wrap_socket(client_socket, ca.ca_file)
+        client_socket.do_handshake()
+
+        context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+        proxy.proxy_server = context.wrap_socket(proxy.proxy_socket, server_hostname='0.0.0.0')
 
     def close(self, s):
         print(f'{s.getpeername()[0]}:{s.getpeername()[1]} has disconnected\n')

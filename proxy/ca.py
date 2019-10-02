@@ -25,11 +25,11 @@ class CertificateAuthority:
         self.cert.set_issuer(self.cert.get_subject())
         self.cert.set_pubkey(self.key)
         self.cert.add_extensions([
-            crypto.X509Extension(b"basicConstraints", True, b"CA:TRUE, pathlen:0"),
-            crypto.X509Extension(b"keyUsage", True, b"keyCertSign, cRLSign"),
-            crypto.X509Extension(b"subjectKeyIdentifier", False, b"hash", subject=self.cert),
+            crypto.X509Extension(b'basicConstraints', True, b'CA:TRUE, pathlen:0'),
+            crypto.X509Extension(b'keyUsage', True, b'keyCertSign, cRLSign'),
+            crypto.X509Extension(b'subjectKeyIdentifier', False, b'hash', subject=self.cert),
         ])
-        self.cert.sign(self.key, "sha1")
+        self.cert.sign(self.key, 'sha1')
 
         with open(self.ca_file, 'wb+') as f:
             f.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, self.key))
