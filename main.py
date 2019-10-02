@@ -1,6 +1,6 @@
 import sys
 
-from src.server.server import Server
+from server.server import Server
 
 
 class Config:
@@ -11,8 +11,8 @@ class Config:
 
 if __name__ == '__main__':
     config = Config()
-
     server = Server(config)
+
     try:
         server.start()
     except KeyboardInterrupt:
