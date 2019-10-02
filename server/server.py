@@ -71,8 +71,14 @@ class Server:
 
         ca = CertificateAuthority()
 
-        client_socket = ssl.wrap_socket(client_socket, ca.ca_file)
+        client_socket.sendall(b'HTTP/1.1 200 Connection Established\r\n\r\n')
+        client_socket = ssl.wrap_socket(client_socket, ca.ca_key_file, ca.ca_file,
+                                        server_side=True, do_handshake_on_connect=False)
+        print(client_socket)
         client_socket.do_handshake()
+        print(client_socket.recv(40960))
+
+        client_socket.sendall(b'HTTP/1.1 200 OK\r\n\r\n<h1>Hello, world!</h1>')
 
         context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
         proxy.proxy_server = context.wrap_socket(proxy.proxy_socket, server_hostname='0.0.0.0')
