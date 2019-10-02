@@ -2,6 +2,7 @@ import socket
 import select
 
 from proxy.proxy import Proxy
+from proxy.ca import CertificateAuthority
 
 REDIRECT_TO = {'host': 'mail.ru', 'port': 80}
 
@@ -29,8 +30,8 @@ class Server:
             for s in read_list:
                 if s == self.server_socket:
                     proxy = Proxy().start(REDIRECT_TO.get('host'), REDIRECT_TO.get('port'))
-
                     client_socket, client_address = self.server_socket.accept()
+
                     if proxy:
                         print(f'{client_address[0]}:{client_address[1]} is connected\n')
 
@@ -49,8 +50,19 @@ class Server:
                     self.close(s)
                     break
                 else:
+                    if self.has_CONNECT(data):
+                        self.wrap_with_ssl(proxy)
+
                     print(data)
                     self.channel[s].send(data)
+
+    @staticmethod
+    def has_CONNECT(data):
+        return data.split(b'\n')[0].split()[0] == b'CONNECT'
+
+    @staticmethod
+    def wrap_with_ssl(proxy):
+        print('need to wrap proxy with ssl')
 
     def close(self, s):
         print(f'{s.getpeername()[0]}:{s.getpeername()[1]} has disconnected\n')
