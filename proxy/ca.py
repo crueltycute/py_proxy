@@ -1,15 +1,14 @@
-from socket import gethostname
 from OpenSSL import crypto
 
-CA_KEY_FILE = 'ca.key'
-CA_FILE = 'ca.crt'
+CA_KEY_FILE = 'ca_key.key'
+CA_FILE = 'ca_crt.pem'
 
 
 class CertificateAuthority:
     def __init__(self, ca_key_file=CA_KEY_FILE, ca_file=CA_FILE):
         self.ca_key_file = ca_key_file
         self.ca_file = ca_file
-        self._generate_ca()
+        # self._generate_ca()
 
     def _generate_ca(self):
         # Generate key
@@ -21,7 +20,7 @@ class CertificateAuthority:
         self.cert = crypto.X509()
         self.cert.set_version(3)
         self.cert.set_serial_number(1)
-        self.cert.get_subject().CN = '0.0.0.0'
+        self.cert.get_subject().CN = '127.0.0.1'
         self.cert.gmtime_adj_notBefore(0)
         self.cert.gmtime_adj_notAfter(315360000)
         self.cert.set_issuer(self.cert.get_subject())
