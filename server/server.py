@@ -5,7 +5,7 @@ import ssl
 from proxy.proxy import Proxy
 from proxy.ca import CertificateAuthority
 
-REDIRECT_TO = {'host': 'mail.ru', 'port': 80}
+REDIRECT_TO = {'host': 'mail.ru', 'port': 443}
 
 UNACCEPTED_CONN_COUNT = 10
 BUFFER_SIZE = 4096
@@ -53,7 +53,7 @@ class Server:
                     break
                 else:
                     if self.has_CONNECT(data):
-                        self.wrap_with_ssl(client_socket, proxy)
+                        self.wrap_with_ssl(s, proxy)
 
                     print(data)
                     self.channel[s].send(data)
@@ -66,17 +66,19 @@ class Server:
             return False
 
     @staticmethod
-    def wrap_with_ssl(client_socket, proxy):
+    def wrap_with_ssl(s, proxy):
         print('trying to wrap proxy with ssl')
 
         ca = CertificateAuthority()
 
-        client_socket = ssl.wrap_socket(client_socket, ca.ca_key_file, ca.ca_file,
-                                        server_side=True, do_handshake_on_connect=False)
-        client_socket.do_handshake()
+        s.sendall(b'HTTP/1.1 200 Connection Established\r\n\r\n')
+        ss = ssl.wrap_socket(s, certfile=ca.ca_file, server_side=True, do_handshake_on_connect=False)
+        ss.do_handshake()
 
+        request = ss.recv(40960)
         context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-        proxy.proxy_server = context.wrap_socket(proxy.proxy_socket, server_hostname='0.0.0.0')
+        s_sock = context.wrap_socket(proxy, server_hostname=REDIRECT_TO.get('host'))
+        s_sock.send(request)
 
     def close(self, s):
         print(f'{s.getpeername()[0]}:{s.getpeername()[1]} has disconnected\n')
